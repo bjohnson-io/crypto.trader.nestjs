@@ -1,0 +1,1 @@
+/Users/bjohnson/Projects/YouTube/TradingSystem/collection-service/src/market-data.interfaces.ts
