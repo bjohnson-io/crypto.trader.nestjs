@@ -29,10 +29,10 @@ export class CollectorService implements OnModuleInit {
         this.client.name = config.exchange;
         this.client.on('error', err => console.log(err)); 
         this.client.on('l2snapshot', (l2snapshot, market) => {
-            this.eventBus.emit('ccxws.l2snapshot', { l2snapshot, market });
+            this.eventBus.emit('collector.l2snapshot', { l2snapshot, market });
         });
         this.client.on('l2update', (l2update, market) => {
-            this.eventBus.emit('ccxws.l2update', { l2update, market });
+            this.eventBus.emit('collector.l2update', { l2update, market });
         });
         for (let market of config.markets) {
             this.client.subscribeTicker(market);

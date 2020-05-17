@@ -18,8 +18,13 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
   afterInit(server: Server) {
     this.server = server;
     this.eventBus.on('orderbook.update', (payload) => {
-      this.server.to(`orderbook.${payload.symbol}`).emit('orderbookUpdate', payload);
-    })
+      this.server.to(`orderbook.${payload.symbol}`).emit('orderbookUpdate', { type: 'update', ...payload });
+      console.log({ type: 'update', sym: payload.symbol, seq: payload.sequence, ask: payload.asks.length, bid: payload.bids.length });
+    });
+    this.eventBus.on('orderbook.snapshot', (payload) => {
+      this.server.to(`orderbook.${payload.symbol}`).emit('orderbookSnapshot', { type: 'snapshot', ...payload });
+      console.log({ type: 'snapshot', sym: payload.symbol, seq: payload.sequence, ask: payload.asks.length, bid: payload.bids.length });
+    });
     this.logger.log('Initialized');
   }
 
@@ -33,15 +38,25 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
   }
 
   @SubscribeMessage('orderbookSubscription')
-  handleOrderbookSubscription(client: Socket, symbol: string ) {
+  handleOrderbookSubscription(client: Socket, symbol: string) {
     client.join(`orderbook.${symbol}`);
-    client.emit('orderbookSubscriptionConfirmed', this.orderbooks.getOrderbook(symbol)); // Send snapshot on subscribe
+    client.emit('orderbookSubscriptionConfirmed', symbol);
+    this.sendOrderbookSnapshot(client, symbol);
   }
 
   @SubscribeMessage('cancelOrderbookSubscription')
-  handleCancelOrderbookSubscription(client: Socket, symbol: string ) {
+  handleCancelOrderbookSubscription(client: Socket, symbol: string) {
     client.leave(`orderbook.${symbol}`);
     client.emit('cancelOrderbookSubscriptionConfirmed', symbol);
+  }
+
+  @SubscribeMessage('requestOrderbookSnapshot')
+  handleOrderbookSnapshotRequest(client: Socket, symbol: string) {
+    this.sendOrderbookSnapshot(client, symbol);
+  }
+
+  private sendOrderbookSnapshot(client: Socket, symbol: string) {
+    client.emit('orderbookSnapshot', this.orderbooks.getOrderbook(symbol));
   }
 
 }
