@@ -6,6 +6,9 @@ interface InternalBuffer {
 const price = 0;
 const size = 1;
 
+/**
+ * This is a buffer used internally by the OrderbookManager
+ */
 export class OrderbookBuffer {
     private buffer: InternalBuffer = {};
 

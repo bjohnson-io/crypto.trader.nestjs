@@ -6,13 +6,18 @@ import { WebsocketGateway } from './websocket.gateway';
 import { CollectorService } from './collector.service';
 import { EventEmitter } from 'events';
 
+/**
+ * The AppModule is the root app module--in our small app,
+ * it is the only module--that loads the various services 
+ * we'll be using to fulfill requests.
+ */
 @Module({
-  imports: [NestEmitterModule.forRoot(new EventEmitter())],
-  controllers: [AppController],
+  imports: [NestEmitterModule.forRoot(new EventEmitter())], // <-- provides that typed EventEmiiter! :)
+  controllers: [AppController], // <-- contains our REST endpoints
   providers: [
-    CollectorService, 
-    OrderbookManager, 
-    WebsocketGateway,
+    CollectorService, // <-- pulls data from the exchange 
+    OrderbookManager, // <-- manages sync'ing of L2 orderbook
+    WebsocketGateway, // <-- handles WS requests (like a controller for WS)
   ],
 })
 export class AppModule {}

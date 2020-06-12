@@ -1,15 +1,21 @@
 import { Market } from './app.interfaces';
 
-interface ThrottleConfig {
-    ticker: number
-    orderbook: number
-}
+/**
+ * This is the config file for our app.  We could use Nest's
+ * ConfigModule, but it really seemed like overkill at this
+ * time.
+ */
 
 export interface AppConfig {
     debug: boolean
     exchange: 'coinbasepro' // Will add more later
     markets: Market[]
     throttle: ThrottleConfig
+}
+
+interface ThrottleConfig {
+    ticker: number
+    orderbook: number
 }
 
 export const config: AppConfig = {

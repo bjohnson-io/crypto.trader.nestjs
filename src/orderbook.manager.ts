@@ -5,7 +5,27 @@ import { EventBus } from './app.events';
 import { OrderBookStore } from 'orderbook-synchronizer';
 import { Order } from 'orderbook-synchronizer/lib/types';
 import { OrderbookBuffer } from './orderbook.buffer';
-
+import { config } from './app.config';
+/**
+ * The OrderbookManager listens for new market data being emitted by
+ * the CollectorService. It stores this data in a temporary buffer until,
+ * at the specified interval, it flushes the buffer and updates the 
+ * orderbook. On update, it emits events over the EventBus which are
+ * caught by the WebsocketGateway. The WS Gateway will broadcast these
+ * updates to the client app as it receives them.
+ * 
+ * The flush interval can be adjusted by changing the throttle.orderbook 
+ * variable in the app.config file.
+ * 
+ * --- SIDE NOTE ---
+ * Sync'ing the exchange's orderbook to a local version in the
+ * (server-side) app + sync'ing the orderbook in the client app to the
+ * one in this app is actually a pain in the ass. To keep everything
+ * running like clockwork, I implemented a buffer with an adjustable
+ * flush interval.  This ensures updates are broadcasted to the client
+ * at regular intervals (10x a second by default) and keeps the
+ * performance level during periods of high trading activity.
+ */
 export interface SequenceTracker {
   [key: string]: number
 }
@@ -26,7 +46,7 @@ export class OrderbookManager implements OnModuleInit {
     this.logger.log('Initialized');
     this.eventBus.on('collector.l2snapshot', (x) => this.addOrReplaceOrderbook(x.market.id, x.l2snapshot));
     this.eventBus.on('collector.l2update', (x) => this.bufferOrderbookUpdate(x.market.id, x.l2update));
-    this.setBufferFlushInterval(100);
+    this.setBufferFlushInterval(config.throttle.orderbook);
   }
 
   getOrderbook(symbol: string): OrderbookUpdatePayload {

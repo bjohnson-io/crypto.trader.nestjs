@@ -5,6 +5,18 @@ import { InjectEventEmitter } from 'nest-emitter';
 import { OrderbookManager } from './orderbook.manager';
 import { EventBus } from './app.events';
 
+/**
+ * This is our websocket gateway. This is a WS server that our
+ * client app (Nuxt/Angular/Ionic/etc.) can connect to & received
+ * real-time updates. Since this is a real-time app, we'll avoid
+ * making controllers and favor communicating everything via
+ * websockets.
+ * 
+ * The important thing to note is that this is the WS server that
+ * serves the client. It is not the websocket client that connects
+ * and pulls market data from the exchange--that would be the
+ * collector service.
+ */
 @WebSocketGateway({ namespace: 'ws' })
 export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private logger = new Logger('WebsocketGateway');
@@ -19,11 +31,11 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
     this.server = server;
     this.eventBus.on('orderbook.update', (payload) => {
       this.server.to(`orderbook.${payload.symbol}`).emit('orderbookUpdate', { type: 'update', ...payload });
-      console.log({ type: 'update', sym: payload.symbol, seq: payload.sequence, ask: payload.asks.length, bid: payload.bids.length });
+      // console.log({ type: 'update', sym: payload.symbol, seq: payload.sequence, ask: payload.asks.length, bid: payload.bids.length });
     });
     this.eventBus.on('orderbook.snapshot', (payload) => {
       this.server.to(`orderbook.${payload.symbol}`).emit('orderbookSnapshot', { type: 'snapshot', ...payload });
-      console.log({ type: 'snapshot', sym: payload.symbol, seq: payload.sequence, ask: payload.asks.length, bid: payload.bids.length });
+      // console.log({ type: 'snapshot', sym: payload.symbol, seq: payload.sequence, ask: payload.asks.length, bid: payload.bids.length });
     });
     this.logger.log('Initialized');
   }
